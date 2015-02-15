@@ -12,22 +12,24 @@
 #define CMD_TASK_QUEUE_SIZE 1
 #define CMD_TASK_PRIO		0
 
-typedef enum
-{
-	LOAD_CFG = 0,
-	SAVE_CFG,
-	RST,
-	SEND,
-	SCAN_WIFI,
-	WEB_SERVER
-}CMD;
+typedef struct __attribute((__packed__)) {
+	uint16_t len;
+	uint8_t data;
+} ARGS;
 
 typedef struct __attribute((__packed__)) {
-	uint8_t cmd;
-	uint16_t len;
-	uint8_t data[];
-}PACKET_TYPE;
+	uint16_t cmd;
+	uint32_t callback;
+	uint16_t callback_checksum;
+	uint16_t argc;
+	ARGS args;
+}PACKET_CMD;
+
+
 
 void CMD_Init();
 void CMD_Input(uint8_t data);
+
+
+
 #endif /* USER_CMD_H_ */
