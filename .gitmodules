@@ -1,3 +1,9 @@
 [submodule "esp8266/esp_mqtt"]
 	path = esp8266/esp_mqtt
 	url = https://github.com/tuanpmt/esp_mqtt.git
+[submodule "modules/mqtt"]
+	path = modules/mqtt
+	url = https://github.com/tuanpmt/esp_mqtt
+[submodule "esp8266/modules/mqtt"]
+	path = esp8266/modules/mqtt
+	url = https://github.com/tuanpmt/esp_mqtt

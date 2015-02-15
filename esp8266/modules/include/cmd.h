@@ -7,7 +7,7 @@
 
 #ifndef USER_CMD_H_
 #define USER_CMD_H_
-#include "typedef.h"
+
 
 #define CMD_TASK_QUEUE_SIZE 1
 #define CMD_TASK_PRIO		0
@@ -29,5 +29,5 @@ typedef struct __attribute((__packed__)) {
 }PACKET_TYPE;
 
 void CMD_Init();
-void CMD_Input(U8 data);
+void CMD_Input(uint8_t data);
 #endif /* USER_CMD_H_ */
