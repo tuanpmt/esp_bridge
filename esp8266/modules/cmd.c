@@ -39,19 +39,60 @@ RINGBUF 		rxRb;
 uint8_t			rxBuf[256];
 
 PROTO_PARSER 	rxProto;
-uint8_t 		protoRxBuf[2048], protoTxBuf[2048];
+uint8_t 		protoRxBuf[2048];
 
 
 static void ICACHE_FLASH_ATTR
 CMD_Task(os_event_t *events);
 
 
-static uint32_t ICACHE_FLASH_ATTR
+
+ICACHE_FLASH_ATTR
+void CMD_ProtoWrite(uint8_t data)
+{
+	switch(data){
+	case 0x7D:
+	case 0x7E:
+	case 0x7F:
+		uart0_write(0x7D);
+		uart0_write(data ^ 0x20);
+		break;
+	default:
+		uart0_write(data);
+	}
+}
+ICACHE_FLASH_ATTR
+void CMD_ProtoWriteBuf(uint8_t *data, uint32_t len)
+{
+	while(len--){
+		CMD_ProtoWrite(*data++);
+	}
+}
+LOCAL ICACHE_FLASH_ATTR
+void CMD_Response(uint16_t cmd, uint32_t _return, uint32_t callback, uint16_t argc, ARGS args[])
+{
+	uint16_t i = 0, j = 0;
+	uart0_write(0x7E);
+	CMD_ProtoWriteBuf((uint8_t*)&cmd, 2);
+	CMD_ProtoWriteBuf((uint8_t*)&callback, 4);
+	CMD_ProtoWriteBuf((uint8_t*)&argc, 2);
+	while(argc--){
+		CMD_ProtoWriteBuf((uint8_t*)&args[i].len, 2);
+		uint8_t *data = &args[i].data;
+		CMD_ProtoWriteBuf(data, args[i].len);
+	}
+	uart0_write(0x7F);
+
+}
+LOCAL uint32_t ICACHE_FLASH_ATTR
 CMD_Exec(const CMD_LIST *scp, PACKET_CMD *packet)
 {
+	uint32_t ret;
 	while (scp->sc_name != CMD_NULL){
 		if(scp->sc_name == packet->cmd) {
-			return scp->sc_function(packet);
+			ret = scp->sc_function(packet);
+			CMD_Response(packet->cmd, ret, 0, 1, NULL);
+			return ret;
 		}
 		scp++;
 	}

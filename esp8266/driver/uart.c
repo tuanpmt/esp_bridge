@@ -108,6 +108,19 @@ uart_tx_one_char(uint8 uart, uint8 TxChar)
     WRITE_PERI_REG(UART_FIFO(uart) , TxChar);
     return OK;
 }
+void ICACHE_FLASH_ATTR
+uart0_write(char c)
+{
+	while (true)
+	{
+	  uint32 fifo_cnt = READ_PERI_REG(UART_STATUS(0)) & (UART_TXFIFO_CNT<<UART_TXFIFO_CNT_S);
+	  if ((fifo_cnt >> UART_TXFIFO_CNT_S & UART_TXFIFO_CNT) < 126) {
+		break;
+	  }
+	}
+
+	WRITE_PERI_REG(UART_FIFO(0) , c);
+}
 
 /******************************************************************************
  * FunctionName : uart1_write_char

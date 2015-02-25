@@ -18,9 +18,9 @@ typedef struct __attribute((__packed__)) {
 } ARGS;
 
 typedef struct __attribute((__packed__)) {
+	uint16_t checksum;
 	uint16_t cmd;
 	uint32_t callback;
-	uint16_t callback_checksum;
 	uint16_t argc;
 	ARGS args;
 }PACKET_CMD;
