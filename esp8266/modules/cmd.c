@@ -6,6 +6,7 @@
  */
 #include "user_interface.h"
 #include "osapi.h"
+#include "mem.h"
 #include "driver/uart.h"
 #include "cmd.h"
 #include "user_config.h"
@@ -14,19 +15,10 @@
 #include "ringbuf.h"
 #include "proto.h"
 #include "debug.h"
-typedef enum
-{
-	CMD_NULL = 0,
-	CMD_WIFI_CONNECT,
-	CMD_READ_MEM
-}CMD_NAME;
+#include "crc16.h"
 
-typedef uint32_t (*cmdfunc_t)(PACKET_CMD *cmd);
 
-typedef struct {
-	CMD_NAME  	sc_name;
-	cmdfunc_t	sc_function;
-} CMD_LIST;
+
 
 const CMD_LIST commands[] =
 {
@@ -68,20 +60,48 @@ void CMD_ProtoWriteBuf(uint8_t *data, uint32_t len)
 		CMD_ProtoWrite(*data++);
 	}
 }
-LOCAL ICACHE_FLASH_ATTR
+ICACHE_FLASH_ATTR
 void CMD_Response(uint16_t cmd, uint32_t _return, uint32_t callback, uint16_t argc, ARGS args[])
 {
-	uint16_t i = 0, j = 0;
-	uart0_write(0x7E);
-	CMD_ProtoWriteBuf((uint8_t*)&cmd, 2);
-	CMD_ProtoWriteBuf((uint8_t*)&callback, 4);
-	CMD_ProtoWriteBuf((uint8_t*)&argc, 2);
+	uint16_t i = argc, j = 0, len = 2 + 4 + 4 + 2;
+	uint8_t *data_send, *data_ptr = NULL;
+	while(i --)
+		len += args[i].len + 2;
+	data_send = (uint8_t *)os_zalloc(len);
+	data_ptr = data_send + 2;	/* reserved for checksum */
+
+	*(uint16_t*)data_ptr = cmd;
+	data_ptr += 2;
+
+	*(uint32_t*)data_ptr = _return;
+	data_ptr += 4;
+
+	*(uint32_t*)data_ptr = callback;
+	data_ptr += 4;
+
+	*(uint16_t*)data_ptr = argc;
+	data_ptr += 2;
+
+	i = 0;
 	while(argc--){
-		CMD_ProtoWriteBuf((uint8_t*)&args[i].len, 2);
+		*(uint16_t*)data_ptr = args[i].len;
+		data_ptr += 2;
+		j = args[i].len;
 		uint8_t *data = &args[i].data;
-		CMD_ProtoWriteBuf(data, args[i].len);
+		while(j --){
+			*(uint8_t*)data_ptr = *data ++;
+			data_ptr ++;
+		}
+		i ++;
 	}
+
+	*(uint16_t*)data_send = crc16_data(data_send + 2, len - 2, 0);
+
+	uart0_write(0x7E);
+	CMD_ProtoWriteBuf((uint8_t*)data_send, len);
 	uart0_write(0x7F);
+
+	os_free(data_send);
 
 }
 LOCAL uint32_t ICACHE_FLASH_ATTR
@@ -91,7 +111,7 @@ CMD_Exec(const CMD_LIST *scp, PACKET_CMD *packet)
 	while (scp->sc_name != CMD_NULL){
 		if(scp->sc_name == packet->cmd) {
 			ret = scp->sc_function(packet);
-			CMD_Response(packet->cmd, ret, 0, 1, NULL);
+			CMD_Response(packet->cmd, ret, 0, 0, NULL);
 			return ret;
 		}
 		scp++;

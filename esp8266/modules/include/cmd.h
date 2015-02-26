@@ -26,10 +26,24 @@ typedef struct __attribute((__packed__)) {
 }PACKET_CMD;
 
 
+typedef enum
+{
+	CMD_NULL = 0,
+	CMD_WIFI_CONNECT,
+	CMD_READ_MEM
+}CMD_NAME;
+
+typedef uint32_t (*cmdfunc_t)(PACKET_CMD *cmd);
+
+typedef struct {
+	CMD_NAME  	sc_name;
+	cmdfunc_t	sc_function;
+} CMD_LIST;
+
 
 void CMD_Init();
 void CMD_Input(uint8_t data);
 
-
+void CMD_Response(uint16_t cmd, uint32_t _return, uint32_t callback, uint16_t argc, ARGS args[]);
 
 #endif /* USER_CMD_H_ */

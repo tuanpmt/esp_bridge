@@ -12,9 +12,10 @@
 #include "mem.h"
 
 #include "user_config.h"
+#include "cmd.h"
 
 static ETSTimer WiFiLinker;
-WifiCallback wifiCb = NULL;
+uint32_t wifiCb = NULL;
 static uint8_t wifiStatus = STATION_IDLE, lastWifiStatus = STATION_IDLE;
 static void ICACHE_FLASH_ATTR wifi_check_ip(void *arg)
 {
@@ -25,36 +26,25 @@ static void ICACHE_FLASH_ATTR wifi_check_ip(void *arg)
 	wifiStatus = wifi_station_get_connect_status();
 	if (wifiStatus == STATION_GOT_IP && ipConfig.ip.addr != 0)
 	{
-
 		os_timer_setfn(&WiFiLinker, (os_timer_func_t *)wifi_check_ip, NULL);
 		os_timer_arm(&WiFiLinker, 2000, 0);
-
-
 	}
 	else
 	{
 		if(wifi_station_get_connect_status() == STATION_WRONG_PASSWORD)
 		{
-
 			INFO("STATION_WRONG_PASSWORD\r\n");
 			wifi_station_connect();
-
-
 		}
 		else if(wifi_station_get_connect_status() == STATION_NO_AP_FOUND)
 		{
-
 			INFO("STATION_NO_AP_FOUND\r\n");
 			wifi_station_connect();
-
-
 		}
 		else if(wifi_station_get_connect_status() == STATION_CONNECT_FAIL)
 		{
-
 			INFO("STATION_CONNECT_FAIL\r\n");
 			wifi_station_connect();
-
 		}
 		else
 		{
@@ -66,25 +56,36 @@ static void ICACHE_FLASH_ATTR wifi_check_ip(void *arg)
 	}
 	if(wifiStatus != lastWifiStatus){
 		lastWifiStatus = wifiStatus;
-		if(wifiCb)
-			wifiCb(wifiStatus);
+		if(wifiCb){
+			ARGS args[1];
+			args[0].len = 1;
+			args[0].data = wifiStatus;
+			CMD_Response(CMD_WIFI_CONNECT, 0, wifiCb, 1, args);
+		}
 	}
 }
 
-void ICACHE_FLASH_ATTR WIFI_Connect(uint8_t* ssid, uint8_t* pass, WifiCallback cb)
+uint32_t ICACHE_FLASH_ATTR
+WIFI_Connect(PACKET_CMD *cmd)
 {
 	struct station_config stationConf;
+	ARGS *ssid, *pwd;
+	ssid = &cmd->args;
+	pwd = ssid + ssid->len + 2;
 
 	INFO("WIFI_INIT\r\n");
 	wifi_set_opmode(STATION_MODE);
 	wifi_station_set_auto_connect(FALSE);
-	wifiCb = cb;
+	if(cmd->argc != 2 || cmd->callback == 0)
+		return 0xFFFFFFFF;
 
+	wifiCb = cmd->callback;
 	os_memset(&stationConf, 0, sizeof(struct station_config));
 
-	os_sprintf(stationConf.ssid, "%s", ssid);
-	os_sprintf(stationConf.password, "%s", pass);
+	os_memcpy(stationConf.ssid, &ssid->data, ssid->len);
+	os_memcpy(stationConf.password, &pwd->data, pwd->len);
 
+	INFO("WIFI: set ssid = %s, pass= %s\r\n", stationConf.ssid, stationConf.password);
 	wifi_station_set_config(&stationConf);
 
 	os_timer_disarm(&WiFiLinker);
@@ -93,5 +94,6 @@ void ICACHE_FLASH_ATTR WIFI_Connect(uint8_t* ssid, uint8_t* pass, WifiCallback c
 
 	wifi_station_set_auto_connect(TRUE);
 	wifi_station_connect();
+	return 0;
 }
 
