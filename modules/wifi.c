@@ -13,6 +13,7 @@
 
 #include "user_config.h"
 #include "cmd.h"
+#include "debug.h"
 
 static ETSTimer WiFiLinker;
 uint32_t wifiCb = NULL;
@@ -57,10 +58,9 @@ static void ICACHE_FLASH_ATTR wifi_check_ip(void *arg)
 	if(wifiStatus != lastWifiStatus){
 		lastWifiStatus = wifiStatus;
 		if(wifiCb){
-			ARGS args[1];
-			args[0].len = 1;
-			args[0].data = wifiStatus;
-			CMD_Response(CMD_WIFI_CONNECT, 0, wifiCb, 1, args);
+			uint16_t crc = CMD_ResponseStart(CMD_WIFI_CONNECT, wifiCb, 0, 1);
+			crc = CMD_ResponseBody(crc, (uint8_t*)&wifiStatus, 1);
+			CMD_ResponseEnd(crc);
 		}
 	}
 }
@@ -69,23 +69,26 @@ uint32_t ICACHE_FLASH_ATTR
 WIFI_Connect(PACKET_CMD *cmd)
 {
 	struct station_config stationConf;
-	ARGS *ssid, *pwd;
-	ssid = &cmd->args;
-	pwd = ssid + ssid->len + 2;
+	uint8_t *ssid, *pwd;
+	ssid = (uint8_t*)&cmd->args;
+	pwd = ssid + *(uint16_t*)ssid + 2;
 
 	INFO("WIFI_INIT\r\n");
-	wifi_set_opmode(STATION_MODE);
+
+
+	os_memset(&stationConf, 0, sizeof(struct station_config));
+
+	os_memcpy(stationConf.ssid, ssid + 2, *(uint16_t*)ssid);
+	os_memcpy(stationConf.password, pwd + 2, *(uint16_t*)pwd);
+
+	INFO("WIFI: set ssid = %s, pass= %s\r\n", stationConf.ssid, stationConf.password);
 	wifi_station_set_auto_connect(FALSE);
+	wifi_set_opmode(STATION_MODE);
+
 	if(cmd->argc != 2 || cmd->callback == 0)
 		return 0xFFFFFFFF;
 
 	wifiCb = cmd->callback;
-	os_memset(&stationConf, 0, sizeof(struct station_config));
-
-	os_memcpy(stationConf.ssid, &ssid->data, ssid->len);
-	os_memcpy(stationConf.password, &pwd->data, pwd->len);
-
-	INFO("WIFI: set ssid = %s, pass= %s\r\n", stationConf.ssid, stationConf.password);
 	wifi_station_set_config(&stationConf);
 
 	os_timer_disarm(&WiFiLinker);

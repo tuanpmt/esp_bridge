@@ -29,6 +29,7 @@ else
 	FLAVOR = $(FLAVOR)
 endif
 
+
 #############################################################
 # Select compile
 #
@@ -57,17 +58,8 @@ ifeq ($(OS),Windows_NT)
 		OBJCOPY = xtensa-lx106-elf-objcopy
 	endif
 	
-	ifndef COMPORT
-		ESPPORT = com1
-	else
-		ESPPORT = $(COMPORT)
-	endif
-	
-	ifndef SDK_BASE
-		SDK_BASE	= c:/Espressif/ESP8266_SDK
-	else
-		SDK_BASE = $(SDK_BASE)
-	endif
+		ESPPORT ?= com1
+		SDK_BASE	?= c:/Espressif/ESP8266_SDK
     ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
 # ->AMD64
     endif
@@ -76,17 +68,10 @@ ifeq ($(OS),Windows_NT)
     endif
 else
 # We are under other system, may be Linux. Assume using gcc.
-	# Can we use -fdata-sections?
-	ifndef COMPORT
-		ESPPORT = /dev/ttyUSB0
-	else
-		ESPPORT = $(COMPORT)
-	endif
-	ifndef SDK_BASE
-		SDK_BASE	= /esptools/esp-open-sdk/sdk
-	else
-		SDK_BASE = $(SDK_BASE)
-	endif
+
+		ESPPORT ?= /dev/ttyUSB0
+		SDK_BASE	?= /esptools/esp-open-sdk/sdk
+
 	CCFLAGS += -Os -ffunction-sections -fno-jump-tables
 	AR = xtensa-lx106-elf-ar
 	CC = xtensa-lx106-elf-gcc
