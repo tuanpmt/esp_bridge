@@ -2,14 +2,14 @@ esp_bridge
 ================
 
 This is source code for esp8266 support bridge for arduino or any MCU using SLIP protocol via Serial port. 
-Library for arduino: [https://github.com/tuanpmt/espduino](https://github.com/tuanpmt/espduino)
+###Library for arduino: [https://github.com/tuanpmt/espduino](https://github.com/tuanpmt/espduino)
 
 If you want using only ESP8266, you can find the **Native MQTT client** library for ESP8266 work well here: 
 [https://github.com/tuanpmt/esp_mqtt](https://github.com/tuanpmt/esp_mqtt)
 
 Warning
 ==============
-This project ***only execute commands from other MCU** via Serial port (like arduino).
+This project **only execute commands from other MCU** via Serial port (like arduino).
 
 Features
 ========
