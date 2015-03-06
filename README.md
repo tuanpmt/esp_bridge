@@ -16,6 +16,7 @@ Features
 - Rock Solid wifi network client for Arduino (of course need to test more and resolve more issues :v)
 - **More reliable** than AT COMMAND library (Personal comments)
 - **Firmware applications written on ESP8266 can be read out completely. For security applications, sometimes you should use it as a Wifi client (network client) and other MCU with Readout protection.**
+- It can be combined to work in parallel with the AT-COMMAND library
 - MQTT module: 
     + MQTT client run stable as Native MQTT client (esp_mqtt)
     + Support subscribing, publishing, authentication, will messages, keep alive pings and all 3 QoS levels (it should be a fully functional client).
