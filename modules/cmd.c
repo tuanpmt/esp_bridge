@@ -160,7 +160,7 @@ CMD_Exec(const CMD_LIST *scp, PACKET_CMD *packet)
 static void ICACHE_FLASH_ATTR
 protoCompletedCb()
 {
-	uint16_t crc = 0, argc, len, resp_crc;
+	uint16_t crc = 0, argc, len, resp_crc, argn = 0;
 	uint8_t *data_ptr;
 	PACKET_CMD *packet;
 	packet = (PACKET_CMD*)protoRxBuf;
@@ -168,18 +168,29 @@ protoCompletedCb()
 	data_ptr = (uint8_t*)&packet->args ;
 	crc = crc16_data((uint8_t*)&packet->cmd, 12, crc);
 	argc = packet->argc;
+
+	INFO("CMD: %d, cb: %d, ret: %d, argc: %d\r\n", packet->cmd, packet->callback, packet->_return, packet->argc);
+
 	while(argc--){
 		len = *((uint16_t*)data_ptr);
+		INFO("Arg[%d], len: %d:", argn++, len);
 		crc = crc16_data(data_ptr, 2, crc);
 		data_ptr += 2;
+		crc = crc16_data(data_ptr, len, crc);
 		while(len --){
-		  crc = crc16_data(data_ptr, 1, crc);
+		  INFO("%02X-", *data_ptr);
 		  data_ptr ++;
 		}
+		INFO("\r\n\r\n");
 	}
 	resp_crc =  *(uint16_t*)data_ptr;
+	INFO("Read CRC: %04X, calculated crc: %04X\r\n", resp_crc, crc);
+
 	if(crc != resp_crc) {
+
 		INFO("ESP: Invalid CRC\r\n");
+
+		INFO("");
 		return;
 	}
 	CMD_Exec(commands, packet);
