@@ -215,7 +215,7 @@ uart0_rx_intr_handler(void *para)
 
 	if(UART_FRM_ERR_INT_ST == (READ_PERI_REG(UART_INT_ST(uart_no)) & UART_FRM_ERR_INT_ST))
 	{
-		os_printf("FRM_ERR\r\n");
+		//os_printf("FRM_ERR\r\n");
 		WRITE_PERI_REG(UART_INT_CLR(uart_no), UART_FRM_ERR_INT_CLR);
 	}
 

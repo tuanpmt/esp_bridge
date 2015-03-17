@@ -234,6 +234,7 @@ uint32_t ICACHE_FLASH_ATTR REST_SetHeader(PACKET_CMD *cmd)
 		client->header = (uint8_t*)os_zalloc(len + 1);
 		CMD_PopArgs(&req, (uint8_t*)client->header);
 		client->header[len] = 0;
+		INFO("Set header: %s\r\n", client->header);
 		break;
 	case HEADER_CONTENT_TYPE:
 		if(client->content_type)
@@ -241,6 +242,7 @@ uint32_t ICACHE_FLASH_ATTR REST_SetHeader(PACKET_CMD *cmd)
 		client->content_type = (uint8_t*)os_zalloc(len + 1);
 		CMD_PopArgs(&req, (uint8_t*)client->content_type);
 		client->content_type[len] = 0;
+		INFO("Set content_type: %s\r\n", client->content_type);
 		break;
 	case HEADER_USER_AGENT:
 		if(client->user_agent)
@@ -248,6 +250,7 @@ uint32_t ICACHE_FLASH_ATTR REST_SetHeader(PACKET_CMD *cmd)
 		client->user_agent = (uint8_t*)os_zalloc(len + 1);
 		CMD_PopArgs(&req, (uint8_t*)client->user_agent);
 		client->user_agent[len] = 0;
+		INFO("Set user_agent: %s\r\n", client->user_agent);
 		break;
 	}
 	return 1;
@@ -258,7 +261,7 @@ uint32_t ICACHE_FLASH_ATTR REST_Request(PACKET_CMD *cmd)
 
 	REQUEST req;
 	REST_CLIENT *client;
-	uint16_t len;
+	uint16_t len, realLen = 0;
 	uint32_t client_ptr;
 	uint8_t *method, *path, *body = NULL;
 
@@ -286,8 +289,11 @@ uint32_t ICACHE_FLASH_ATTR REST_Request(PACKET_CMD *cmd)
 
 	//body
 	if(CMD_GetArgc(&req) == 3){
+		realLen = 0;
 		len = 0;
 	} else {
+		CMD_PopArgs(&req, (uint8_t*)&realLen);
+
 		len = CMD_ArgLen(&req);
 		body = (uint8_t*)os_zalloc(len + 1);
 		CMD_PopArgs(&req, body);
@@ -308,13 +314,13 @@ uint32_t ICACHE_FLASH_ATTR REST_Request(PACKET_CMD *cmd)
 												method, path,
 												client->host,
 												client->header,
-												len,
+												realLen,
 												client->content_type,
 												client->user_agent);
 
-	if(len > 0){
-		os_memcpy(client->data + client->data_len, body, len);
-		client->data_len += len;
+	if(realLen > 0){
+		os_memcpy(client->data + client->data_len, body, realLen);
+		client->data_len += realLen;
 		os_sprintf(client->data + client->data_len, "\r\n\r\n");
 		client->data_len += 4;
 	}
