@@ -224,10 +224,10 @@ uint32_t ICACHE_FLASH_ATTR MQTTAPP_Publish(PACKET_CMD *cmd)
 	REQUEST req;
 	uint16_t len;
 	uint8_t *topic, *data;
-	uint32_t qos = 0, retain = 0;
+	uint32_t qos = 0, retain = 0, data_len;
 
 	CMD_Request(&req, cmd);
-	if(CMD_GetArgc(&req) != 5)
+	if(CMD_GetArgc(&req) != 6)
 		return 0;
 	CMD_PopArgs(&req, (uint8_t*)&client);
 
@@ -238,15 +238,20 @@ uint32_t ICACHE_FLASH_ATTR MQTTAPP_Publish(PACKET_CMD *cmd)
 	CMD_PopArgs(&req, topic);
 	topic[len] = 0;
 
-	/*Get topic*/
+
+	/*Get data*/
 	len = CMD_ArgLen(&req);
 
 	data = (uint8_t*)os_zalloc(len);
 	CMD_PopArgs(&req, data);
 
+	/*Get data length*/
+	CMD_PopArgs(&req, (uint8_t*)&data_len);
+
 	CMD_PopArgs(&req, (uint8_t*)&qos);
 	CMD_PopArgs(&req, (uint8_t*)&retain);
-	MQTT_Publish(client, topic, data, len, qos, retain);
+
+	MQTT_Publish(client, topic, data, data_len, qos, retain);
 	os_free(topic);
 	os_free(data);
 	return 1;
