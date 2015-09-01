@@ -188,9 +188,9 @@ uint32_t ICACHE_FLASH_ATTR REST_Setup(PACKET_CMD *cmd)
 	client->header = (uint8_t*)os_zalloc(4);
 	client->header[0] = 0;
 
-	client->content_type = (uint8_t*)os_zalloc(22);
+	client->content_type = (uint8_t*)os_zalloc(34);
 	os_sprintf(client->content_type, "application/x-www-form-urlencoded");
-	client->content_type[21] = 0;
+	client->content_type[33] = 0;
 
 	client->user_agent = (uint8_t*)os_zalloc(17);
 	os_sprintf(client->user_agent, "ESPDRUINO@tuanpmt");
