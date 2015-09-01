@@ -193,7 +193,7 @@ uint32_t ICACHE_FLASH_ATTR REST_Setup(PACKET_CMD *cmd)
 	client->content_type[21] = 0;
 
 	client->user_agent = (uint8_t*)os_zalloc(17);
-	os_sprintf(client->user_agent, "ESPDRUINO@tuanpmt");
+	os_sprintf(client->user_agent, "ESPDUINO@tuanpmt");
 	client->user_agent[16] = 0;
 
 	client->pCon = (struct espconn *)os_zalloc(sizeof(struct espconn));
