@@ -305,7 +305,7 @@ uint32_t ICACHE_FLASH_ATTR REST_Request(PACKET_CMD *cmd)
 	INFO("REQ: method: %s, path: %s\r\n", method, path);
 
 	client->data_len = os_sprintf(client->data, "%s %s HTTP/1.1\r\n"
-												"Host: %s\r\n"
+												"Host: %s:%d\r\n"
 												"%s"
 												"Content-Length: %d\r\n"
 												"Connection: close\r\n"
@@ -313,6 +313,7 @@ uint32_t ICACHE_FLASH_ATTR REST_Request(PACKET_CMD *cmd)
 												"User-Agent: %s\r\n\r\n",
 												method, path,
 												client->host,
+												client->port,
 												client->header,
 												realLen,
 												client->content_type,
